@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OOXML Tools - View, Edit, Analyze & Compare OOXML Documents</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .header .subtitle {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+        }
+
+        .mode-btn {
+            background: #34495e;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .mode-btn.active {
+            background: #3498db;
+        }
+
+        .mode-btn:hover {
+            background: #4a6741;
+        }
+
+        .main-container {
+            display: flex;
+            height: calc(100vh - 70px);
+        }
+
+        .file-upload-area {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 3px dashed #bdc3c7;
+            background: white;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .file-upload-area.dragover {
+            border-color: #3498db;
+            background: #ecf0f1;
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            color: #95a5a6;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 1.2rem;
+            color: #7f8c8d;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .upload-subtext {
+            font-size: 0.9rem;
+            color: #95a5a6;
+            text-align: center;
+        }
+
+        .file-inputs {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .file-input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-input-label {
+            background: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .file-input-label:hover {
+            background: #2980b9;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: white;
+            border-right: 1px solid #ecf0f1;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .sidebar.visible {
+            display: block;
+        }
+
+        .sidebar-header {
+            background: #ecf0f1;
+            padding: 15px;
+            border-bottom: 1px solid #bdc3c7;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .file-tree {
+            padding: 10px;
+        }
+
+        .file-item {
+            padding: 6px 8px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin: 1px 0;
+            display: flex;
+            align-items: center;
+            transition: background 0.2s;
+            user-select: none;
+        }
+
+        .file-item:hover {
+            background: #ecf0f1;
+        }
+
+        .file-item.selected {
+            background: #3498db;
+            color: white;
+        }
+
+        .file-item.xml-file {
+            font-weight: 400;
+            color: #34495e;
+        }
+
+        .file-item.folder {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .file-item.folder:hover {
+            background: #d5dbdb;
+        }
+
+        .file-item.modified {
+            border-left: 4px solid #e74c3c;
+        }
+
+        .file-item.added {
+            border-left: 4px solid #3498db;
+        }
+
+        .file-item.removed {
+            border-left: 4px solid #95a5a6;
+        }
+
+        .file-icon {
+            margin-right: 8px;
+            width: 16px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .expand-icon {
+            margin-right: 4px;
+            width: 12px;
+            height: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            transition: transform 0.2s;
+            flex-shrink: 0;
+        }
+
+        .expand-icon.expanded {
+            transform: rotate(90deg);
+        }
+
+        .folder-children {
+            margin-left: 16px;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .folder-children.collapsed {
+            max-height: 0;
+        }
+
+        .folder-children.expanded {
+            max-height: 1000px;
+        }
+
+        .file-path {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .content-area {
+            flex: 1;
+            display: none;
+            background: white;
+        }
+
+        .content-area.visible {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content-header {
+            background: #ecf0f1;
+            padding: 15px;
+            border-bottom: 1px solid #bdc3c7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .content-title {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .content-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .action-btn:hover {
+            background: #2980b9;
+        }
+
+        .action-btn.save {
+            background: #27ae60;
+        }
+
+        .action-btn.save:hover {
+            background: #229954;
+        }
+
+        .content-body {
+            flex: 1;
+            padding: 20px;
+            overflow: auto;
+        }
+
+        .content-editor {
+            width: 100%;
+            height: 100%;
+            border: 1px solid #3c3c3c;
+            border-radius: 6px;
+            padding: 20px;
+            font-family: 'Consolas', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            tab-size: 2;
+        }
+
+        .content-viewer {
+            background: #1e1e1e;
+            border: 1px solid #3c3c3c;
+            border-radius: 6px;
+            padding: 20px;
+            font-family: 'Consolas', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            overflow: auto;
+            height: 100%;
+            color: #d4d4d4;
+            tab-size: 2;
+        }
+
+        /* VS Code XML Syntax Highlighting */
+        .xml-element {
+            color: #569cd6;
+        }
+
+        .xml-attribute-name {
+            color: #92c5f7;
+        }
+
+        .xml-attribute-value {
+            color: #ce9178;
+        }
+
+        .xml-text {
+            color: #d4d4d4;
+        }
+
+        .xml-comment {
+            color: #6a9955;
+            font-style: italic;
+        }
+
+        .xml-declaration {
+            color: #c586c0;
+        }
+
+        .xml-cdata {
+            color: #b5cea8;
+        }
+
+        .xml-bracket {
+            color: #808080;
+        }
+
+        .line-numbers {
+            position: absolute;
+            left: 0;
+            top: 20px;
+            width: 60px;
+            background: #252526;
+            color: #858585;
+            font-family: 'Consolas', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            padding: 0 10px 0 0;
+            text-align: right;
+            border-right: 1px solid #3c3c3c;
+            user-select: none;
+        }
+
+        .content-viewer-wrapper {
+            position: relative;
+            height: 100%;
+        }
+
+        .content-viewer.with-lines {
+            padding-left: 80px;
+        }
+
+        .comparison-mode {
+            display: none;
+            flex: 1;
+        }
+
+        .comparison-mode.visible {
+            display: flex;
+        }
+
+        .comparison-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #ecf0f1;
+        }
+
+        .comparison-panel:last-child {
+            border-right: none;
+        }
+
+        .comparison-header {
+            background: #ecf0f1;
+            padding: 10px 15px;
+            border-bottom: 1px solid #bdc3c7;
+            font-weight: 600;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .comparison-content {
+            flex: 1;
+            padding: 20px;
+            overflow: auto;
+            font-family: 'Consolas', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+
+        .diff-added {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .diff-removed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .diff-modified {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .loading.visible {
+            display: block;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px;
+            border: 1px solid #c3e6cb;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: 50%;
+            }
+            
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .comparison-mode {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>OOXML Tools</h1>
+            <div class="subtitle">View, Edit, Analyze & Compare OOXML Documents</div>
+        </div>
+        <div class="mode-selector">
+            <button class="mode-btn" id="compareMode">Compare Mode</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <!-- File Upload Area -->
+        <div class="file-upload-area" id="uploadArea">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">Drag & Drop OOXML Files Here</div>
+            <div class="upload-subtext">Supports .docx, .xlsx, .pptx and other OOXML formats</div>
+            
+            <div class="file-inputs">
+                <div class="file-input-group">
+                    <label for="fileInput1" class="file-input-label">Select File 1</label>
+                    <input type="file" id="fileInput1" class="file-input" accept=".docx,.xlsx,.pptx,.dotx,.xltx,.potx">
+                </div>
+                <div class="file-input-group" id="file2Group" style="display: none;">
+                    <label for="fileInput2" class="file-input-label">Select File 2</label>
+                    <input type="file" id="fileInput2" class="file-input" accept=".docx,.xlsx,.pptx,.dotx,.xltx,.potx">
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header" id="sidebarHeader">File Structure</div>
+            <div class="file-tree" id="fileTree"></div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="content-area" id="contentArea">
+            <div class="content-header">
+                <div class="content-title" id="contentTitle">Select a file to view</div>
+                <div class="content-actions">
+                    <button class="action-btn save" id="saveBtn" style="display: none;">Save Changes</button>
+                </div>
+            </div>
+            <div class="content-body">
+                <textarea class="content-editor" id="contentEditor" style="display: none;" placeholder="Select an XML file to edit..."></textarea>
+                <div class="content-viewer-wrapper">
+                    <div class="line-numbers" id="lineNumbers"></div>
+                    <div class="content-viewer with-lines" id="contentViewer"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comparison Mode -->
+        <div class="comparison-mode" id="comparisonMode">
+            <div class="comparison-panel">
+                <div class="comparison-header" id="comparisonHeader1">File 1</div>
+                <div class="comparison-content" id="comparisonContent1"></div>
+            </div>
+            <div class="comparison-panel">
+                <div class="comparison-header" id="comparisonHeader2">File 2</div>
+                <div class="comparison-content" id="comparisonContent2"></div>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div class="loading" id="loading">
+            <div>Processing OOXML files...</div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
+
+<script>
+        class OOXMLTools {
+            constructor() {
+                this.currentMode = 'viewer';
+                this.loadedFiles = {};
+                this.currentFile = null;
+                this.currentFilePath = null;
+                this.isEditing = false;
+                
+                this.initializeEventListeners();
+            }
+
+            initializeEventListeners() {
+                // Mode switching
+                document.getElementById('compareMode').addEventListener('click', () => this.switchMode('compare'));
+
+                // File inputs
+                document.getElementById('fileInput1').addEventListener('change', (e) => this.handleFileSelect(e, 'file1'));
+                document.getElementById('fileInput2').addEventListener('change', (e) => this.handleFileSelect(e, 'file2'));
+
+                // Drag and drop
+                const uploadArea = document.getElementById('uploadArea');
+                uploadArea.addEventListener('dragover', this.handleDragOver.bind(this));
+                uploadArea.addEventListener('dragleave', this.handleDragLeave.bind(this));
+                uploadArea.addEventListener('drop', this.handleDrop.bind(this));
+
+                // Content actions
+                document.getElementById('saveBtn').addEventListener('click', () => this.saveCurrentFile());
+
+                // Content editor
+                document.getElementById('contentEditor').addEventListener('input', () => {
+                    this.isEditing = true;
+                    this.updateSaveButton();
+                });
+            }
+
+            switchMode(mode) {
+                this.currentMode = mode;
+                
+                // Update mode buttons
+                document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+                document.getElementById('compareMode').classList.toggle('active', mode === 'compare');
+
+                // Show/hide file input 2
+                const file2Group = document.getElementById('file2Group');
+                file2Group.style.display = mode === 'compare' ? 'block' : 'none';
+
+                // Reset interface
+                this.resetInterface();
+                
+                if (mode === 'compare' && Object.keys(this.loadedFiles).length === 2) {
+                    this.showComparisonMode();
+                } else if (mode !== 'compare' && Object.keys(this.loadedFiles).length >= 1) {
+                    this.showEditorMode();
+                }
+            }
+
+            resetInterface() {
+                document.getElementById('sidebar').classList.remove('visible');
+                document.getElementById('contentArea').classList.remove('visible');
+                document.getElementById('comparisonMode').classList.remove('visible');
+                document.getElementById('uploadArea').style.display = 'flex';
+                document.getElementById('loading').classList.remove('visible');
+            }
+
+            handleDragOver(e) {
+                e.preventDefault();
+                document.getElementById('uploadArea').classList.add('dragover');
+            }
+
+            handleDragLeave(e) {
+                e.preventDefault();
+                document.getElementById('uploadArea').classList.remove('dragover');
+            }
+
+            handleDrop(e) {
+                e.preventDefault();
+                document.getElementById('uploadArea').classList.remove('dragover');
+                
+                const files = Array.from(e.dataTransfer.files);
+                const ooxmlFiles = files.filter(file => this.isOOXMLFile(file));
+                
+                if (ooxmlFiles.length === 0) {
+                    this.showError('Please drop valid OOXML files (.docx, .xlsx, .pptx, etc.)');
+                    return;
+                }
+
+                if (this.currentMode === 'compare') {
+                    if (ooxmlFiles.length >= 2) {
+                        this.loadFile(ooxmlFiles[0], 'file1');
+                        this.loadFile(ooxmlFiles[1], 'file2');
+                    } else if (ooxmlFiles.length === 1) {
+                        const fileKey = Object.keys(this.loadedFiles).length === 0 ? 'file1' : 'file2';
+                        this.loadFile(ooxmlFiles[0], fileKey);
+                    }
+                } else if (ooxmlFiles.length > 0) {
+                    this.loadFile(ooxmlFiles[0], 'file1');
+                }
+            }
+
+            handleFileSelect(e, fileKey) {
+                const file = e.target.files[0];
+                if (file && this.isOOXMLFile(file)) {
+                    this.loadFile(file, fileKey);
+                }
+            }
+
+            isOOXMLFile(file) {
+                const ooxmlExtensions = ['.docx', '.xlsx', '.pptx', '.dotx', '.xltx', '.potx'];
+                return ooxmlExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
+            }
+
+            async loadFile(file, fileKey) {
+                try {
+                    this.showLoading();
+                    
+                    const zip = await JSZip.loadAsync(file);
+                    this.loadedFiles[fileKey] = {
+                        name: file.name,
+                        zip: zip,
+                        files: {}
+                    };
+
+                    // Extract all XML files
+  for (const fileName in zip.files) {
+                        if (fileName.endsWith('.xml') || fileName.endsWith('.rels')) {
+      const content = await zip.files[fileName].async('text');
+                            this.loadedFiles[fileKey].files[fileName] = content;
+                        }
+                    }
+
+                    this.hideLoading();
+
+                    if (this.currentMode === 'compare' && Object.keys(this.loadedFiles).length === 2) {
+                        this.showComparisonMode();
+                    } else if (this.currentMode !== 'compare') {
+                        this.showEditorMode();
+                    }
+
+                    this.showSuccess(`Loaded ${file.name} successfully`);
+                } catch (error) {
+                    this.hideLoading();
+                    this.showError(`Error loading file: ${error.message}`);
+                }
+            }
+
+            showEditorMode() {
+                document.getElementById('uploadArea').style.display = 'none';
+                document.getElementById('sidebar').classList.add('visible');
+                document.getElementById('contentArea').classList.add('visible');
+                
+                this.buildFileTree();
+            }
+
+            showComparisonMode() {
+                document.getElementById('uploadArea').style.display = 'none';
+                document.getElementById('comparisonMode').classList.add('visible');
+                
+                this.buildComparisonView();
+            }
+
+            buildFileTree() {
+                const fileTree = document.getElementById('fileTree');
+                fileTree.innerHTML = '';
+                
+                const fileData = this.loadedFiles[Object.keys(this.loadedFiles)[0]];
+                const files = Object.keys(fileData.files).sort();
+                
+                const tree = this.buildTreeStructure(files);
+                this.renderTreeNode(tree, fileTree, '');
+            }
+
+            buildTreeStructure(filePaths) {
+                const tree = {};
+                
+                filePaths.forEach(filePath => {
+                    const parts = filePath.split('/');
+                    let current = tree;
+                    
+                    parts.forEach((part, index) => {
+                        if (!current[part]) {
+                            current[part] = {
+                                isFile: index === parts.length - 1,
+                                fullPath: parts.slice(0, index + 1).join('/'),
+                                children: {}
+                            };
+                        }
+                        current = current[part].children;
+                    });
+                });
+                
+                return tree;
+            }
+
+            renderTreeNode(node, container, prefix) {
+                Object.keys(node).sort().forEach(key => {
+                    const item = node[key];
+                    const itemElement = document.createElement('div');
+                    
+                    if (item.isFile) {
+                        // Render file
+                        itemElement.className = 'file-item xml-file';
+                        itemElement.innerHTML = `
+                            <span class="file-icon">📄</span>
+                            <span class="file-path">${key}</span>
+                        `;
+                        itemElement.addEventListener('click', () => this.selectFile(item.fullPath));
+                    } else {
+                        // Render folder
+                        const hasChildren = Object.keys(item.children).length > 0;
+                        itemElement.className = 'file-item folder';
+                        itemElement.innerHTML = `
+                            <span class="expand-icon">${hasChildren ? '▶' : ''}</span>
+                            <span class="file-icon">📁</span>
+                            <span class="file-path">${key}</span>
+                        `;
+                        
+                        if (hasChildren) {
+                            const childrenContainer = document.createElement('div');
+                            childrenContainer.className = 'folder-children expanded';
+                            
+                            // Add click handler for expand/collapse
+                            itemElement.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                this.toggleFolder(itemElement, childrenContainer);
+                            });
+                            
+                            // Render children
+                            this.renderTreeNode(item.children, childrenContainer, prefix + key + '/');
+                            
+                            container.appendChild(itemElement);
+                            container.appendChild(childrenContainer);
+                            return;
+                        }
+                    }
+                    
+                    container.appendChild(itemElement);
+                });
+            }
+
+            toggleFolder(folderElement, childrenContainer) {
+                const expandIcon = folderElement.querySelector('.expand-icon');
+                const isExpanded = childrenContainer.classList.contains('expanded');
+                
+                if (isExpanded) {
+                    childrenContainer.classList.remove('expanded');
+                    childrenContainer.classList.add('collapsed');
+                    expandIcon.classList.remove('expanded');
+                } else {
+                    childrenContainer.classList.remove('collapsed');
+                    childrenContainer.classList.add('expanded');
+                    expandIcon.classList.add('expanded');
+                }
+            }
+
+            selectFile(filePath) {
+                // Update selection
+                document.querySelectorAll('.file-item').forEach(item => item.classList.remove('selected'));
+                event.currentTarget.classList.add('selected');
+                
+                this.currentFilePath = filePath;
+                const fileData = this.loadedFiles[Object.keys(this.loadedFiles)[0]];
+                const content = fileData.files[filePath];
+                
+                document.getElementById('contentTitle').textContent = filePath;
+                
+                const formattedXML = this.formatXML(content);
+                document.getElementById('contentEditor').value = formattedXML;
+                
+                // Display formatted XML with syntax highlighting
+                this.displayFormattedXML(formattedXML);
+                
+                this.isEditing = false;
+                this.updateSaveButton();
+            }
+
+            buildComparisonView() {
+                const [file1Key, file2Key] = Object.keys(this.loadedFiles);
+                const file1 = this.loadedFiles[file1Key];
+                const file2 = this.loadedFiles[file2Key];
+                
+                document.getElementById('comparisonHeader1').textContent = file1.name;
+                document.getElementById('comparisonHeader2').textContent = file2.name;
+                
+                // Build comparison tree and content
+                this.buildComparisonTree(file1, file2);
+            }
+
+            buildComparisonTree(file1, file2) {
+                const allFiles = new Set([...Object.keys(file1.files), ...Object.keys(file2.files)]);
+                const sidebar = document.getElementById('sidebar');
+                const fileTree = document.getElementById('fileTree');
+                
+                sidebar.classList.add('visible');
+                fileTree.innerHTML = '';
+                
+                const tree = this.buildTreeStructure(Array.from(allFiles));
+                this.renderComparisonTreeNode(tree, fileTree, '', file1, file2);
+            }
+
+            renderComparisonTreeNode(node, container, prefix, file1, file2) {
+                Object.keys(node).sort().forEach(key => {
+                    const item = node[key];
+                    const itemElement = document.createElement('div');
+                    
+                    if (item.isFile) {
+                        // Render file with comparison status
+                        itemElement.className = 'file-item xml-file';
+                        
+                        const inFile1 = file1.files.hasOwnProperty(item.fullPath);
+                        const inFile2 = file2.files.hasOwnProperty(item.fullPath);
+                        
+                        if (inFile1 && inFile2) {
+                            const content1 = file1.files[item.fullPath];
+                            const content2 = file2.files[item.fullPath];
+                            if (content1 !== content2) {
+                                itemElement.classList.add('modified');
+                            }
+                        } else if (inFile1 && !inFile2) {
+                            itemElement.classList.add('removed');
+                        } else if (!inFile1 && inFile2) {
+                            itemElement.classList.add('added');
+                        }
+                        
+                        itemElement.innerHTML = `
+                            <span class="file-icon">📄</span>
+                            <span class="file-path">${key}</span>
+                        `;
+                        itemElement.addEventListener('click', () => this.showComparison(item.fullPath, file1, file2));
+                    } else {
+                        // Render folder
+                        const hasChildren = Object.keys(item.children).length > 0;
+                        itemElement.className = 'file-item folder';
+                        
+                        // Check if folder has any changes in its children
+                        const folderStatus = this.getFolderComparisonStatus(item.children, file1, file2, prefix + key + '/');
+                        if (folderStatus.hasChanges) {
+                            if (folderStatus.hasModified) itemElement.classList.add('modified');
+                            if (folderStatus.hasAdded) itemElement.classList.add('added');
+                            if (folderStatus.hasRemoved) itemElement.classList.add('removed');
+                        }
+                        
+                        itemElement.innerHTML = `
+                            <span class="expand-icon">${hasChildren ? '▶' : ''}</span>
+                            <span class="file-icon">📁</span>
+                            <span class="file-path">${key}</span>
+                        `;
+                        
+                        if (hasChildren) {
+                            const childrenContainer = document.createElement('div');
+                            childrenContainer.className = 'folder-children expanded';
+                            
+                            // Add click handler for expand/collapse
+                            itemElement.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                this.toggleFolder(itemElement, childrenContainer);
+                            });
+                            
+                            // Render children
+                            this.renderComparisonTreeNode(item.children, childrenContainer, prefix + key + '/', file1, file2);
+                            
+                            container.appendChild(itemElement);
+                            container.appendChild(childrenContainer);
+                            return;
+                        }
+                    }
+                    
+                    container.appendChild(itemElement);
+                });
+            }
+
+            getFolderComparisonStatus(children, file1, file2, prefix) {
+                let hasChanges = false;
+                let hasModified = false;
+                let hasAdded = false;
+                let hasRemoved = false;
+                
+                const checkNode = (node, currentPrefix) => {
+                    Object.keys(node).forEach(key => {
+                        const item = node[key];
+                        if (item.isFile) {
+                            const filePath = item.fullPath;
+                            const inFile1 = file1.files.hasOwnProperty(filePath);
+                            const inFile2 = file2.files.hasOwnProperty(filePath);
+                            
+                            if (inFile1 && inFile2) {
+                                const content1 = file1.files[filePath];
+                                const content2 = file2.files[filePath];
+                                if (content1 !== content2) {
+                                    hasChanges = true;
+                                    hasModified = true;
+                                }
+                            } else if (inFile1 && !inFile2) {
+                                hasChanges = true;
+                                hasRemoved = true;
+                            } else if (!inFile1 && inFile2) {
+                                hasChanges = true;
+                                hasAdded = true;
+                            }
+                        } else {
+                            checkNode(item.children, currentPrefix + key + '/');
+                        }
+                    });
+                };
+                
+                checkNode(children, prefix);
+                
+                return { hasChanges, hasModified, hasAdded, hasRemoved };
+            }
+
+            showComparison(filePath, file1, file2) {
+                // Update selection
+                document.querySelectorAll('.file-item').forEach(item => item.classList.remove('selected'));
+                event.currentTarget.classList.add('selected');
+                
+                const content1 = file1.files[filePath] || '(File not present)';
+                const content2 = file2.files[filePath] || '(File not present)';
+                
+                const formatted1 = this.formatXML(content1);
+                const formatted2 = this.formatXML(content2);
+                
+                document.getElementById('comparisonContent1').innerHTML = this.applySyntaxHighlighting(formatted1);
+                document.getElementById('comparisonContent2').innerHTML = this.applySyntaxHighlighting(formatted2);
+            }
+
+            formatXML(xmlString) {
+                try {
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(xmlString, "text/xml");
+                    
+                    // Check for parsing errors
+                    const parseError = xmlDoc.getElementsByTagName("parsererror");
+                    if (parseError.length > 0) {
+                        return xmlString; // Return original if can't parse
+                    }
+                    
+                    return this.prettifyXML(xmlDoc.documentElement, 0);
+                } catch (error) {
+                    return xmlString; // Return original on error
+                }
+            }
+
+            prettifyXML(node, indent = 0) {
+                const indentStr = '  '.repeat(indent);
+                let result = '';
+                
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                    result += indentStr + '<' + node.nodeName;
+                    
+                    // Add attributes
+                    for (let i = 0; i < node.attributes.length; i++) {
+                        const attr = node.attributes[i];
+                        result += ` ${attr.name}="${attr.value}"`;
+                    }
+                    
+                    if (node.childNodes.length === 0) {
+                        result += '/>\n';
+                    } else {
+                        result += '>\n';
+                        
+                        for (let child of node.childNodes) {
+                            if (child.nodeType === Node.ELEMENT_NODE) {
+                                result += this.prettifyXML(child, indent + 1);
+                            } else if (child.nodeType === Node.TEXT_NODE) {
+                                const text = child.textContent.trim();
+                                if (text) {
+                                    result += '  '.repeat(indent + 1) + text + '\n';
+                                }
+                            }
+                        }
+                        
+                        result += indentStr + '</' + node.nodeName + '>\n';
+                    }
+                }
+                
+                return result;
+            }
+
+            displayFormattedXML(xmlContent) {
+                const contentViewer = document.getElementById('contentViewer');
+                const lineNumbers = document.getElementById('lineNumbers');
+                
+                // Apply syntax highlighting
+                const highlightedXML = this.applySyntaxHighlighting(xmlContent);
+                contentViewer.innerHTML = highlightedXML;
+                
+                // Generate line numbers
+                const lines = xmlContent.split('\n');
+                const lineNumbersHTML = lines.map((_, index) => 
+                    `<div>${index + 1}</div>`
+                ).join('');
+                lineNumbers.innerHTML = lineNumbersHTML;
+            }
+
+            applySyntaxHighlighting(xmlContent) {
+                // Escape HTML first
+                let highlighted = xmlContent
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;');
+
+                // XML Declaration
+                highlighted = highlighted.replace(
+                    /(&lt;\?xml[^&]*\?&gt;)/g,
+                    '<span class="xml-declaration">$1</span>'
+                );
+
+                // Comments
+                highlighted = highlighted.replace(
+                    /(&lt;!--[\s\S]*?--&gt;)/g,
+                    '<span class="xml-comment">$1</span>'
+                );
+
+                // CDATA
+                highlighted = highlighted.replace(
+                    /(&lt;!\[CDATA\[[\s\S]*?\]\]&gt;)/g,
+                    '<span class="xml-cdata">$1</span>'
+                );
+
+                // Elements with attributes
+                highlighted = highlighted.replace(
+                    /(&lt;\/?)([a-zA-Z][a-zA-Z0-9:._-]*)((?:\s+[a-zA-Z][a-zA-Z0-9:._-]*\s*=\s*"[^"]*")*)\s*(\/?&gt;)/g,
+                    function(match, openBracket, elementName, attributes, closeBracket) {
+                        let result = '<span class="xml-bracket">' + openBracket + '</span>';
+                        result += '<span class="xml-element">' + elementName + '</span>';
+                        
+                        // Highlight attributes
+                        if (attributes) {
+                            result += attributes.replace(
+                                /(\s+)([a-zA-Z][a-zA-Z0-9:._-]*)\s*=\s*("[^"]*")/g,
+                                '$1<span class="xml-attribute-name">$2</span>=<span class="xml-attribute-value">$3</span>'
+                            );
+                        }
+                        
+                        result += '<span class="xml-bracket">' + closeBracket + '</span>';
+                        return result;
+                    }
+                );
+
+                return highlighted;
+            }
+
+            updateSaveButton() {
+                const saveBtn = document.getElementById('saveBtn');
+                saveBtn.style.display = this.isEditing ? 'inline-block' : 'none';
+            }
+
+            saveCurrentFile() {
+                if (this.currentFilePath && this.isEditing) {
+                    const content = document.getElementById('contentEditor').value;
+                    const fileKey = Object.keys(this.loadedFiles)[0];
+                    this.loadedFiles[fileKey].files[this.currentFilePath] = content;
+                    
+                    this.isEditing = false;
+                    this.updateSaveButton();
+                    this.showSuccess('File saved successfully');
+                }
+            }
+
+            showLoading() {
+                document.getElementById('loading').classList.add('visible');
+            }
+
+            hideLoading() {
+                document.getElementById('loading').classList.remove('visible');
+            }
+
+            showError(message) {
+                this.showMessage(message, 'error');
+            }
+
+            showSuccess(message) {
+                this.showMessage(message, 'success');
+            }
+
+            showMessage(message, type) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = type;
+                messageDiv.textContent = message;
+                
+                document.body.appendChild(messageDiv);
+                
+                setTimeout(() => {
+                    document.body.removeChild(messageDiv);
+                }, 3000);
+            }
+        }
+
+        // Initialize the application
+        const ooxmlTools = new OOXMLTools();
+</script>
+</body>
+</html>
