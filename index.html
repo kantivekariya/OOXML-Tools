@@ -187,9 +187,9 @@
             </div>
 
             <!-- Compare Mode -->
-            <div id="compareContent" class="hidden flex-1 flex flex-col">
+            <div id="compareContent" class="hidden flex-1 flex flex-col h-full min-h-0">
                 <!-- Compare Header -->
-                <div class="bg-white border-b border-gray-200 p-4">
+                <div class="bg-white border-b border-gray-200 p-4 flex-shrink-0">
                     <div class="flex items-center justify-between">
                         <h3 class="text-lg font-semibold text-gray-800">File Comparison</h3>
                         <div class="flex items-center space-x-4">
@@ -202,35 +202,33 @@
                 </div>
 
                 <!-- File Tabs -->
-                <div id="fileTabs" class="bg-gray-50 border-b border-gray-200 px-4 py-2 hidden">
+                <div id="fileTabs" class="bg-gray-50 border-b border-gray-200 px-4 py-2 hidden flex-shrink-0">
                     <div class="flex space-x-4">
-                        <div id="fileTab1" class="px-4 py-2 bg-white border border-gray-300 rounded-t-lg shadow-sm">
-                            <span class="text-sm font-medium text-gray-700">File 1</span>
-                            <button class="ml-2 text-red-500 hover:text-red-700" onclick="removeFile('file1')">×</button>
+                        <div id="fileTab1" class="px-4 py-2 bg-white border border-gray-300 rounded-t-lg shadow-sm hidden">
+                            <!-- Content will be populated dynamically by JavaScript -->
                         </div>
                         <div id="fileTab2" class="px-4 py-2 bg-white border border-gray-300 rounded-t-lg shadow-sm hidden">
-                            <span class="text-sm font-medium text-gray-700">File 2</span>
-                            <button class="ml-2 text-red-500 hover:text-red-700" onclick="removeFile('file2')">×</button>
+                            <!-- Content will be populated dynamically by JavaScript -->
                         </div>
                     </div>
                 </div>
 
                 <!-- Comparison Panels -->
-                <div class="flex-1 flex">
+                <div class="flex-1 flex min-h-0 overflow-hidden">
                     <!-- Left Panel -->
-                    <div class="flex-1 border-r border-gray-300">
-                        <div class="bg-gray-100 px-4 py-2 border-b border-gray-200">
-                            <h4 id="compareTitle1" class="font-medium text-gray-800">File 1</h4>
+                    <div class="flex-1 border-r border-gray-300 flex flex-col min-h-0 max-h-full">
+                        <div class="bg-gray-100 px-4 py-2 border-b border-gray-200 flex-shrink-0">
+                            <h4 id="compareTitle1" class="font-medium text-gray-800">Select first file</h4>
                         </div>
-                        <div id="compareContent1" class="h-full bg-editor-bg text-editor-text font-mono text-sm leading-6 overflow-auto custom-scrollbar p-4"></div>
+                        <div id="compareContent1" class="flex-1 bg-editor-bg text-editor-text font-mono text-sm leading-6 overflow-y-auto overflow-x-auto custom-scrollbar p-4 min-h-0 max-h-full"></div>
                     </div>
 
                     <!-- Right Panel -->
-                    <div class="flex-1">
-                        <div class="bg-gray-100 px-4 py-2 border-b border-gray-200">
-                            <h4 id="compareTitle2" class="font-medium text-gray-800">File 2</h4>
+                    <div class="flex-1 flex flex-col min-h-0 max-h-full">
+                        <div class="bg-gray-100 px-4 py-2 border-b border-gray-200 flex-shrink-0">
+                            <h4 id="compareTitle2" class="font-medium text-gray-800">Select second file</h4>
                         </div>
-                        <div id="compareContent2" class="h-full bg-editor-bg text-editor-text font-mono text-sm leading-6 overflow-auto custom-scrollbar p-4"></div>
+                        <div id="compareContent2" class="flex-1 bg-editor-bg text-editor-text font-mono text-sm leading-6 overflow-y-auto overflow-x-auto custom-scrollbar p-4 min-h-0 max-h-full"></div>
                     </div>
                 </div>
             </div>

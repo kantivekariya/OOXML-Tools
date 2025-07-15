@@ -72,6 +72,7 @@ class OOXMLTools {
             explorerUploadSection.classList.add('hidden');
             compareUploadSection.classList.remove('hidden');
             this.updateCompareCards();
+            this.updateCompareUI(); // Update file tabs and panel headers
         } else {
             explorerUploadSection.classList.remove('hidden');
             compareUploadSection.classList.add('hidden');
@@ -194,6 +195,10 @@ class OOXMLTools {
                 this.updateCompareCards();
                 if (Object.keys(this.loadedFiles).length >= 2) {
                     this.showComparisonMode();
+                } else {
+                    // Update file tabs even if only one file is loaded
+                    document.getElementById('fileTabs').classList.remove('hidden');
+                    this.updateCompareUI();
                 }
             } else {
                 this.updateExplorerCard();
@@ -226,6 +231,7 @@ class OOXMLTools {
         document.getElementById('compareContent').classList.remove('hidden');
         document.getElementById('fileTabs').classList.remove('hidden');
         
+        this.updateCompareUI();
         this.buildComparisonFileTree();
         this.setupSynchronizedScrolling();
     }
@@ -233,25 +239,53 @@ class OOXMLTools {
     updateCompareUI() {
         const fileKeys = Object.keys(this.loadedFiles);
         
-        // Update file tabs
+        // Reset tabs to default state first
+        const tab1 = document.getElementById('fileTab1');
+        const tab2 = document.getElementById('fileTab2');
+        tab1.classList.add('hidden');
+        tab2.classList.add('hidden');
+        
+        // Update file tabs with file names and remove buttons
         if (fileKeys.length >= 1) {
-            const tab1 = document.getElementById('fileTab1');
-            tab1.querySelector('span').textContent = this.loadedFiles[fileKeys[0]].name;
+            const fileName1 = this.loadedFiles[fileKeys[0]].name;
+            tab1.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm font-medium text-gray-700 truncate max-w-40" title="${fileName1}">${fileName1}</span>
+                    <button onclick="removeFileFromCard('${fileKeys[0]}')" class="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            `;
             tab1.classList.remove('hidden');
+            
+            // Update comparison title for first file
+            document.getElementById('compareTitle1').textContent = fileName1;
+        } else {
+            // Reset to default when no files
+            document.getElementById('compareTitle1').textContent = 'Select first file';
         }
         
         if (fileKeys.length >= 2) {
-            const tab2 = document.getElementById('fileTab2');
-            tab2.querySelector('span').textContent = this.loadedFiles[fileKeys[1]].name;
+            const fileName2 = this.loadedFiles[fileKeys[1]].name;
+            tab2.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm font-medium text-gray-700 truncate max-w-40" title="${fileName2}">${fileName2}</span>
+                    <button onclick="removeFileFromCard('${fileKeys[1]}')" class="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            `;
             tab2.classList.remove('hidden');
-        }
-
-        // Update comparison titles
-        if (fileKeys.length >= 1) {
-            document.getElementById('compareTitle1').textContent = this.loadedFiles[fileKeys[0]].name;
-        }
-        if (fileKeys.length >= 2) {
-            document.getElementById('compareTitle2').textContent = this.loadedFiles[fileKeys[1]].name;
+            
+            // Update comparison title for second file
+            document.getElementById('compareTitle2').textContent = fileName2;
+        } else {
+            // Reset to default when no second file
+            document.getElementById('compareTitle2').textContent = 'Select second file';
         }
     }
 
@@ -372,10 +406,16 @@ class OOXMLTools {
         
         if (this.currentMode === 'compare') {
             this.updateCompareCards();
+            this.updateCompareUI(); // Update file tabs and panel headers
             if (Object.keys(this.loadedFiles).length < 2) {
                 this.resetInterface();
             } else {
                 this.buildComparisonFileTree();
+            }
+            
+            // Show file tabs if any files remain
+            if (Object.keys(this.loadedFiles).length > 0) {
+                document.getElementById('fileTabs').classList.remove('hidden');
             }
         } else {
             this.updateExplorerCard();
@@ -718,30 +758,95 @@ class OOXMLTools {
         const content2 = document.getElementById('compareContent2');
         
         // Remove existing listeners
-        content1.removeEventListener('scroll', this.scrollHandler1);
-        content2.removeEventListener('scroll', this.scrollHandler2);
+        if (this.scrollHandler1) {
+            content1.removeEventListener('scroll', this.scrollHandler1);
+        }
+        if (this.scrollHandler2) {
+            content2.removeEventListener('scroll', this.scrollHandler2);
+        }
         
-        // Create new handlers
+        // Create new handlers with both vertical and horizontal synchronization
         this.scrollHandler1 = (e) => {
             if (!this.isScrolling) {
                 this.isScrolling = true;
-                content2.scrollTop = e.target.scrollTop;
-                content2.scrollLeft = e.target.scrollLeft;
-                setTimeout(() => this.isScrolling = false, 50);
+                const target = e.target;
+                
+                // Synchronize both vertical and horizontal scroll
+                content2.scrollTop = target.scrollTop;
+                content2.scrollLeft = target.scrollLeft;
+                
+                // Use requestAnimationFrame for smoother scrolling
+                requestAnimationFrame(() => {
+                    this.isScrolling = false;
+                });
             }
         };
         
         this.scrollHandler2 = (e) => {
             if (!this.isScrolling) {
                 this.isScrolling = true;
-                content1.scrollTop = e.target.scrollTop;
-                content1.scrollLeft = e.target.scrollLeft;
-                setTimeout(() => this.isScrolling = false, 50);
+                const target = e.target;
+                
+                // Synchronize both vertical and horizontal scroll
+                content1.scrollTop = target.scrollTop;
+                content1.scrollLeft = target.scrollLeft;
+                
+                // Use requestAnimationFrame for smoother scrolling
+                requestAnimationFrame(() => {
+                    this.isScrolling = false;
+                });
             }
         };
         
-        content1.addEventListener('scroll', this.scrollHandler1);
-        content2.addEventListener('scroll', this.scrollHandler2);
+        // Add event listeners for synchronized scrolling
+        content1.addEventListener('scroll', this.scrollHandler1, { passive: true });
+        content2.addEventListener('scroll', this.scrollHandler2, { passive: true });
+        
+        // Also synchronize wheel events for better responsiveness
+        const wheelHandler1 = (e) => {
+            if (!this.isScrolling) {
+                e.preventDefault();
+                this.isScrolling = true;
+                
+                const deltaX = e.deltaX;
+                const deltaY = e.deltaY;
+                
+                content1.scrollLeft += deltaX;
+                content1.scrollTop += deltaY;
+                content2.scrollLeft += deltaX;
+                content2.scrollTop += deltaY;
+                
+                requestAnimationFrame(() => {
+                    this.isScrolling = false;
+                });
+            }
+        };
+        
+        const wheelHandler2 = (e) => {
+            if (!this.isScrolling) {
+                e.preventDefault();
+                this.isScrolling = true;
+                
+                const deltaX = e.deltaX;
+                const deltaY = e.deltaY;
+                
+                content1.scrollLeft += deltaX;
+                content1.scrollTop += deltaY;
+                content2.scrollLeft += deltaX;
+                content2.scrollTop += deltaY;
+                
+                requestAnimationFrame(() => {
+                    this.isScrolling = false;
+                });
+            }
+        };
+        
+        content1.addEventListener('wheel', wheelHandler1, { passive: false });
+        content2.addEventListener('wheel', wheelHandler2, { passive: false });
+        
+        // Store wheel handlers for cleanup
+        this.wheelHandler1 = wheelHandler1;
+        this.wheelHandler2 = wheelHandler2;
     }
 
     removeFile(fileKey) {
@@ -766,6 +871,7 @@ class OOXMLTools {
         this.loadedFiles = {};
         if (this.currentMode === 'compare') {
             this.updateCompareCards();
+            this.updateCompareUI(); // Reset file tabs and panel headers
         } else {
             this.updateExplorerCard();
         }
