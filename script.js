@@ -161,11 +161,14 @@ class OOXMLTools {
     }
 
     handleExplorerFileSelect(e) {
-        const file = e.target.files[0];
-        if (file && this.isOOXMLFile(file)) {
-            this.loadFile(file, this.generateFileKey());
-        } else if (file) {
-            this.showToast('❌ Please select a valid OOXML file (.docx, .xlsx, .xlsm, .pptx, etc.)', 'error');
+        const files = Array.from(e.target.files);
+        const validFiles = files.filter(f => this.isOOXMLFile(f));
+        const invalidCount = files.length - validFiles.length;
+        validFiles.forEach(file => this.loadFile(file, this.generateFileKey()));
+        if (invalidCount > 0) {
+            this.showToast(`❌ ${invalidCount} file(s) skipped — unsupported format`, 'error');
+        } else if (files.length === 0) {
+            // nothing selected, ignore
         }
         e.target.value = '';
     }
@@ -309,7 +312,7 @@ class OOXMLTools {
                 <div class="text-4xl mb-3">📁</div>
                 <span class="text-gray-600 font-medium">Select OOXML File</span>
                 <p class="text-sm text-gray-400 mt-1">Supports .docx, .xlsx, .xlsm, .pptx</p>
-                <input type="file" id="fileInput1" class="hidden" accept=".docx,.xlsx,.xlsm,.pptx,.dotx,.xltx,.potx">
+                <input type="file" id="fileInput1" class="hidden" accept=".docx,.xlsx,.xlsm,.pptx,.dotx,.xltx,.potx" multiple>
             </div>
         `;
         card.className = 'bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-blue-400 transition-colors cursor-pointer';
