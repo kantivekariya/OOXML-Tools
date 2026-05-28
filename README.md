@@ -160,10 +160,6 @@ We welcome contributions! Here's how you can help:
 - Test across different browsers
 - Update documentation for new features
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## 🙏 Acknowledgments
 
 - Inspired by the [OOXML Tools Chrome Extension](https://chromewebstore.google.com/detail/ooxml-tools/bjmmjfdegplhkefakjkccocjanekbapn)
