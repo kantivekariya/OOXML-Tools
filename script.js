@@ -45,6 +45,14 @@ class OOXMLTools {
         return '📄';
     }
 
+    getFileTypeColor(fileName) {
+        const name = fileName.toLowerCase();
+        if (name.endsWith('.xlsx') || name.endsWith('.xlsm') || name.endsWith('.xltx')) return '#22c55e';
+        if (name.endsWith('.docx') || name.endsWith('.dotx')) return '#3b82f6';
+        if (name.endsWith('.pptx') || name.endsWith('.potx')) return '#f97316';
+        return '#6b7280';
+    }
+
     setupInitialCardListeners() {
         const explorerCard = document.getElementById('fileCard1');
         const explorerInput = document.getElementById('fileInput1');
@@ -420,54 +428,52 @@ class OOXMLTools {
 
         fileKeys.forEach(fileKey => {
             const fileData = this.loadedFiles[fileKey];
-            const fileGroup = document.createElement('div');
-            fileGroup.className = 'mb-1';
-            fileGroup.dataset.fileKey = fileKey;
-
-            const fileHeader = document.createElement('div');
-            fileHeader.className = 'flex items-center justify-between px-2 py-2 rounded cursor-pointer hover:bg-gray-700 group select-none';
-
-            const icon = this.getFileIcon(fileData.name);
             const xmlCount = Object.keys(fileData.files).length;
+            const typeColor = this.getFileTypeColor(fileData.name);
+            const icon = this.getFileIcon(fileData.name);
 
-            fileHeader.innerHTML = `
-                <div class="flex items-center space-x-2 min-w-0 flex-1">
-                    <span class="text-xs text-gray-400 transform transition-transform duration-200 rotate-90" data-expand>▶</span>
-                    <span>${icon}</span>
-                    <span class="text-sm font-medium text-editor-text truncate" title="${fileData.name}">${fileData.name}</span>
-                    <span class="text-xs text-gray-500 flex-shrink-0">(${xmlCount})</span>
-                </div>
-                <button class="text-gray-500 hover:text-red-400 p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                        onclick="event.stopPropagation(); removeFileFromCard('${fileKey}')">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            const group = document.createElement('div');
+            group.className = 'sidebar-file-group';
+            group.dataset.fileKey = fileKey;
+
+            const header = document.createElement('div');
+            header.className = 'sidebar-file-header';
+            header.innerHTML = `
+                <span class="sidebar-chevron open">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </span>
+                <span class="sidebar-type-bar" style="background:${typeColor}"></span>
+                <span style="font-size:15px;flex-shrink:0;line-height:1">${icon}</span>
+                <span class="sidebar-filename" title="${fileData.name}">${fileData.name}</span>
+                <span class="sidebar-count">${xmlCount}</span>
+                <button class="sidebar-remove" title="Remove" onclick="event.stopPropagation(); removeFileFromCard('${fileKey}')">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                     </svg>
                 </button>
             `;
 
-            // Tree content — starts expanded
-            const fileContent = document.createElement('div');
-            fileContent.className = 'ml-2 border-l border-gray-700 pl-1 mb-1';
+            const treeContent = document.createElement('div');
+            treeContent.className = 'sidebar-tree';
 
             const files = Object.keys(fileData.files).sort();
             const tree = this.buildTreeStructure(files);
-            this.renderTreeNode(tree, fileContent, '', fileKey);
+            this.renderTreeNode(tree, treeContent, '', fileKey);
 
-            fileHeader.addEventListener('click', () => {
-                const expandIcon = fileHeader.querySelector('[data-expand]');
-                const isExpanded = !fileContent.classList.contains('hidden');
-                if (isExpanded) {
-                    fileContent.classList.add('hidden');
-                    expandIcon.classList.remove('rotate-90');
+            header.addEventListener('click', () => {
+                const chevron = header.querySelector('.sidebar-chevron');
+                if (treeContent.classList.contains('hidden')) {
+                    treeContent.classList.remove('hidden');
+                    chevron.classList.add('open');
                 } else {
-                    fileContent.classList.remove('hidden');
-                    expandIcon.classList.add('rotate-90');
+                    treeContent.classList.add('hidden');
+                    chevron.classList.remove('open');
                 }
             });
 
-            fileGroup.appendChild(fileHeader);
-            fileGroup.appendChild(fileContent);
-            fileTree.appendChild(fileGroup);
+            group.appendChild(header);
+            group.appendChild(treeContent);
+            fileTree.appendChild(group);
         });
     }
 
@@ -511,48 +517,70 @@ class OOXMLTools {
     }
 
     renderTreeNode(node, container, prefix, fileKey) {
+        const xmlIcon = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#75bfff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>`;
+        const relsIcon = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`;
+        const folderIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="#e8c07a" stroke="none"><path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>`;
+        const folderOpenIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="#f0c870" stroke="none"><path d="M20 6h-8l-2-2H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/></svg>`;
+        const chevronSvg = `<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`;
+
         Object.keys(node).sort().forEach(key => {
             const item = node[key];
-            const itemElement = document.createElement('div');
 
             if (item.isFile) {
-                itemElement.className = 'tree-item flex items-center p-2 cursor-pointer text-editor-text hover:bg-gray-700 rounded';
-                itemElement.innerHTML = `
-                    <span class="mr-2">📄</span>
-                    <span class="text-sm">${key}</span>
-                `;
-                itemElement.addEventListener('click', (e) => this.selectFile(fileKey, item.fullPath, e));
+                const fileIcon = item.fullPath.endsWith('.rels') ? relsIcon : xmlIcon;
+                const el = document.createElement('div');
+                el.className = 'tree-file-node tree-item';
+                el.innerHTML = `<span style="flex-shrink:0;display:flex">${fileIcon}</span><span class="tree-node-label">${key}</span>`;
+                el.addEventListener('click', (e) => this.selectFile(fileKey, item.fullPath, e));
+                container.appendChild(el);
             } else {
                 const hasChildren = Object.keys(item.children).length > 0;
-                itemElement.className = 'tree-item';
+                const wrapper = document.createElement('div');
 
-                const folderDiv = document.createElement('div');
-                folderDiv.className = 'flex items-center p-2 cursor-pointer text-editor-text hover:bg-gray-700 rounded';
-                folderDiv.innerHTML = `
-                    <span class="mr-1 text-xs transform transition-transform ${hasChildren ? 'rotate-0' : ''}" data-expand="▶">▶</span>
-                    <span class="mr-2">📁</span>
-                    <span class="text-sm font-medium">${key}</span>
-                `;
+                const folderRow = document.createElement('div');
+                folderRow.className = 'tree-folder-node';
+
+                const chevron = document.createElement('span');
+                chevron.className = 'sidebar-chevron';
+                chevron.style.visibility = hasChildren ? 'visible' : 'hidden';
+                chevron.innerHTML = chevronSvg;
+
+                const folderIconSpan = document.createElement('span');
+                folderIconSpan.style.cssText = 'flex-shrink:0;display:flex';
+                folderIconSpan.innerHTML = folderIcon;
+
+                const label = document.createElement('span');
+                label.className = 'tree-node-label';
+                label.textContent = key;
+
+                folderRow.appendChild(chevron);
+                folderRow.appendChild(folderIconSpan);
+                folderRow.appendChild(label);
+                wrapper.appendChild(folderRow);
 
                 if (hasChildren) {
-                    const childrenContainer = document.createElement('div');
-                    childrenContainer.className = 'ml-4 hidden';
+                    const childrenDiv = document.createElement('div');
+                    childrenDiv.className = 'tree-children-container hidden';
 
-                    folderDiv.addEventListener('click', (e) => {
+                    folderRow.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        this.toggleFolder(folderDiv, childrenContainer);
+                        if (childrenDiv.classList.contains('hidden')) {
+                            childrenDiv.classList.remove('hidden');
+                            chevron.classList.add('open');
+                            folderIconSpan.innerHTML = folderOpenIcon;
+                        } else {
+                            childrenDiv.classList.add('hidden');
+                            chevron.classList.remove('open');
+                            folderIconSpan.innerHTML = folderIcon;
+                        }
                     });
 
-                    this.renderTreeNode(item.children, childrenContainer, prefix + key + '/', fileKey);
-
-                    itemElement.appendChild(folderDiv);
-                    itemElement.appendChild(childrenContainer);
-                } else {
-                    itemElement.appendChild(folderDiv);
+                    this.renderTreeNode(item.children, childrenDiv, prefix + key + '/', fileKey);
+                    wrapper.appendChild(childrenDiv);
                 }
-            }
 
-            container.appendChild(itemElement);
+                container.appendChild(wrapper);
+            }
         });
     }
 
@@ -641,9 +669,9 @@ class OOXMLTools {
     }
 
     selectFile(fileKey, filePath, e) {
-        document.querySelectorAll('.tree-item').forEach(item => item.classList.remove('bg-blue-600'));
+        document.querySelectorAll('.tree-file-node').forEach(el => el.classList.remove('active'));
         const target = e ? e.currentTarget : event.currentTarget;
-        target.classList.add('bg-blue-600');
+        target.classList.add('active');
 
         this.currentFilePath = filePath;
         this.currentFileKey = fileKey;

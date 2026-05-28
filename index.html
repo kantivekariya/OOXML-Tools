@@ -80,6 +80,115 @@
         .tree-item:hover {
             background-color: rgba(255, 255, 255, 0.1);
         }
+
+        /* ── Modern sidebar ── */
+        .sidebar-file-group { margin-bottom: 2px; }
+
+        .sidebar-file-header {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.15s;
+        }
+        .sidebar-file-header:hover { background: rgba(255,255,255,0.08); }
+        .sidebar-file-header:hover .sidebar-remove { opacity: 1; }
+
+        .sidebar-type-bar {
+            width: 3px;
+            height: 22px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+        .sidebar-chevron {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            color: #6b7280;
+            transition: transform 0.2s ease;
+        }
+        .sidebar-chevron.open { transform: rotate(90deg); }
+
+        .sidebar-filename {
+            flex: 1;
+            font-size: 13px;
+            font-weight: 500;
+            color: #d4d4d4;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .sidebar-count {
+            font-size: 10px;
+            color: #6b7280;
+            background: rgba(255,255,255,0.08);
+            border-radius: 10px;
+            padding: 1px 7px;
+            flex-shrink: 0;
+        }
+        .sidebar-remove {
+            opacity: 0;
+            transition: opacity 0.15s;
+            display: flex;
+            align-items: center;
+            color: #6b7280;
+            padding: 3px;
+            border-radius: 4px;
+            cursor: pointer;
+            flex-shrink: 0;
+            background: none;
+            border: none;
+        }
+        .sidebar-remove:hover { color: #ef4444; background: rgba(239,68,68,0.15); }
+
+        .sidebar-tree {
+            margin: 1px 0 4px 15px;
+            border-left: 1px solid rgba(255,255,255,0.07);
+            padding-left: 5px;
+        }
+
+        .tree-file-node {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 6px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12.5px;
+            color: #c0c8d4;
+            transition: background 0.1s;
+            user-select: none;
+        }
+        .tree-file-node:hover { background: rgba(255,255,255,0.07); }
+        .tree-file-node.active { background: rgba(59,130,246,0.2); color: #93c5fd; }
+
+        .tree-folder-node {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 6px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12.5px;
+            color: #c0c8d4;
+            transition: background 0.1s;
+            user-select: none;
+        }
+        .tree-folder-node:hover { background: rgba(255,255,255,0.07); }
+
+        .tree-node-label {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .tree-children-container {
+            padding-left: 12px;
+            border-left: 1px solid rgba(255,255,255,0.06);
+            margin-left: 9px;
+        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans">
@@ -163,11 +272,11 @@
                         <h3 class="font-semibold text-lg">File Explorer</h3>
                         <p id="fileInfo" class="text-sm text-gray-400 mt-1"></p>
                     </div>
-                    <button id="addFileBtn" class="hidden flex items-center space-x-1 text-xs bg-blue-600 text-white px-2 py-1.5 rounded hover:bg-blue-700 transition-colors flex-shrink-0 ml-2">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    <button id="addFileBtn" class="hidden flex items-center gap-1 text-xs font-medium text-blue-400 hover:text-blue-300 px-2 py-1.5 rounded-md hover:bg-white hover:bg-opacity-10 transition-all flex-shrink-0" title="Add another file">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                         </svg>
-                        <span>Add</span>
+                        <span>Add File</span>
                     </button>
                     <input type="file" id="addFileInput" class="hidden" accept=".docx,.xlsx,.xlsm,.pptx,.dotx,.xltx,.potx" multiple>
                 </div>
