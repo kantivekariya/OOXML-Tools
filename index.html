@@ -110,7 +110,7 @@
             <div class="text-center p-8 max-w-2xl">
                 <div class="text-6xl mb-4">📁</div>
                 <h3 class="text-xl font-semibold text-gray-700 mb-2">Drop OOXML Files Here</h3>
-                <p class="text-gray-500 mb-6">Supports .docx, .xlsx, .pptx and other OOXML formats</p>
+                <p class="text-gray-500 mb-6">Supports .docx, .xlsx, .xlsm, .pptx and other OOXML formats</p>
                 
                 <!-- File Upload Section -->
                 <div id="fileUploadSection" class="space-y-6">
@@ -156,12 +156,23 @@
         </div>
 
         <!-- Sidebar -->
-        <aside id="sidebar" class="w-80 bg-editor-sidebar border-r border-editor-border text-editor-text hidden">
-            <div class="p-4 border-b border-editor-border">
-                <h3 class="font-semibold text-lg">File Explorer</h3>
-                <p id="fileInfo" class="text-sm text-gray-400 mt-1"></p>
+        <aside id="sidebar" class="w-80 bg-editor-sidebar border-r border-editor-border text-editor-text hidden flex flex-col">
+            <div class="p-4 border-b border-editor-border flex-shrink-0">
+                <div class="flex items-center justify-between">
+                    <div class="min-w-0">
+                        <h3 class="font-semibold text-lg">File Explorer</h3>
+                        <p id="fileInfo" class="text-sm text-gray-400 mt-1"></p>
+                    </div>
+                    <button id="addFileBtn" class="hidden flex items-center space-x-1 text-xs bg-blue-600 text-white px-2 py-1.5 rounded hover:bg-blue-700 transition-colors flex-shrink-0 ml-2">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        <span>Add</span>
+                    </button>
+                    <input type="file" id="addFileInput" class="hidden" accept=".docx,.xlsx,.xlsm,.pptx,.dotx,.xltx,.potx" multiple>
+                </div>
             </div>
-            <div id="fileTree" class="p-2 overflow-y-auto custom-scrollbar h-full"></div>
+            <div id="fileTree" class="p-2 overflow-y-auto custom-scrollbar flex-1"></div>
         </aside>
 
         <!-- Main Content Area -->
