@@ -35,3 +35,29 @@ export async function loadOOXMLFile(file) {
 
   return { name: file.name, zip, files };
 }
+
+export async function downloadOOXMLFile(fileData) {
+  const { name, zip: originalZip, files: modifiedFiles } = fileData;
+  const newZip = new JSZip();
+
+  for (const fileName in originalZip.files) {
+    const entry = originalZip.files[fileName];
+    if (entry.dir) continue;
+    if (modifiedFiles[fileName] !== undefined) {
+      newZip.file(fileName, modifiedFiles[fileName]);
+    } else {
+      const content = await entry.async('arraybuffer');
+      newZip.file(fileName, content);
+    }
+  }
+
+  const blob = await newZip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}

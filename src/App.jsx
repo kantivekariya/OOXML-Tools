@@ -7,7 +7,7 @@ import CompareView from './components/CompareView';
 import ConfirmDialog from './components/ConfirmDialog';
 import LoadingOverlay from './components/LoadingOverlay';
 import ToastContainer from './components/ToastContainer';
-import { isOOXMLFile, loadOOXMLFile } from './lib/fileUtils';
+import { isOOXMLFile, loadOOXMLFile, downloadOOXMLFile } from './lib/fileUtils';
 import { formatXML } from './lib/xmlUtils';
 import { generateProfessionalDiff } from './lib/diffUtils';
 import { useToast } from './hooks/useToast';
@@ -309,6 +309,21 @@ export default function App() {
     showToast('Changes discarded', 'info');
   }, [originalLines, confirm, showToast]);
 
+  const handleDownload = useCallback(async () => {
+    if (!currentFileKey) return;
+    const fileData = loadedFiles[currentFileKey];
+    if (!fileData) return;
+    try {
+      setLoading(true);
+      await downloadOOXMLFile(fileData);
+      showToast(`Downloaded ${fileData.name}`, 'success');
+    } catch (err) {
+      showToast(`Error downloading file: ${err.message}`, 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [currentFileKey, loadedFiles, showToast]);
+
   const handleDeleteXmlFile = useCallback(async (fileKey, filePath) => {
     const confirmed = await confirm(
       'Delete File',
@@ -460,6 +475,16 @@ export default function App() {
                               ✕ Discard
                             </button>
                           )}
+                          <button
+                            onClick={handleDownload}
+                            className="bg-blue-600 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-700 transition-colors flex items-center gap-1.5"
+                            title="Download updated OOXML file"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                            Download
+                          </button>
                           <button
                             onClick={handleDeleteCurrentFile}
                             className="bg-red-600 text-white px-3 py-1.5 rounded text-sm hover:bg-red-700 transition-colors"
