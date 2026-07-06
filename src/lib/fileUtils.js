@@ -1,4 +1,5 @@
 import JSZip from 'jszip';
+import { calculateSHA256 } from './hashUtils';
 
 export const OOXML_EXTENSIONS = ['.docx', '.xlsx', '.xlsm', '.pptx', '.dotx', '.xltx', '.potx'];
 
@@ -23,7 +24,10 @@ export function getFileTypeColor(fileName) {
 }
 
 export async function loadOOXMLFile(file) {
-  const zip = await JSZip.loadAsync(file);
+  const buffer = await file.arrayBuffer();
+  const hash = await calculateSHA256(new Uint8Array(buffer));
+
+  const zip = await JSZip.loadAsync(buffer);
   const files = {};
 
   for (const fileName in zip.files) {
@@ -33,7 +37,7 @@ export async function loadOOXMLFile(file) {
     }
   }
 
-  return { name: file.name, zip, files };
+  return { name: file.name, zip, files, hash };
 }
 
 export async function downloadOOXMLFile(fileData) {

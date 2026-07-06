@@ -9,7 +9,8 @@ import LoadingOverlay from './components/LoadingOverlay';
 import ToastContainer from './components/ToastContainer';
 import { isOOXMLFile, loadOOXMLFile, downloadOOXMLFile } from './lib/fileUtils';
 import { formatXML } from './lib/xmlUtils';
-import { generateProfessionalDiff } from './lib/diffUtils';
+import { generateProfessionalDiff, buildIdenticalView } from './lib/diffUtils';
+import { calculateSHA256, compareHashes } from './lib/hashUtils';
 import { useToast } from './hooks/useToast';
 import { useConfirm } from './hooks/useConfirm';
 
@@ -371,22 +372,28 @@ export default function App() {
   }, [confirm, showToast]);
 
   const handleSelectCompareFile = useCallback(
-    (filePath) => {
-      setLoadedFiles((prev) => {
-        const fileKeys = Object.keys(prev);
-        if (fileKeys.length < 2) return prev;
-        const file1 = prev[fileKeys[0]];
-        const file2 = prev[fileKeys[1]];
-        const content1 = file1.files[filePath] || '(File not present)';
-        const content2 = file2.files[filePath] || '(File not present)';
-        const formatted1 = formatXML(content1);
-        const formatted2 = formatXML(content2);
-        const result = generateProfessionalDiff(formatted1, formatted2);
-        setDiffResult(result);
-        return prev;
-      });
+    async (filePath) => {
+      const fileKeys = Object.keys(loadedFiles);
+      if (fileKeys.length < 2) return;
+      const file1 = loadedFiles[fileKeys[0]];
+      const file2 = loadedFiles[fileKeys[1]];
+      const content1 = file1.files[filePath] || '(File not present)';
+      const content2 = file2.files[filePath] || '(File not present)';
+
+      const formatted1 = formatXML(content1);
+      const formatted2 = formatXML(content2);
+
+      const [{ identical }, hash1, hash2] = await Promise.all([
+        compareHashes(formatted1, formatted2),
+        calculateSHA256(formatted1),
+        calculateSHA256(formatted2),
+      ]);
+      const result = identical
+        ? buildIdenticalView(formatted1)
+        : generateProfessionalDiff(formatted1, formatted2);
+      setDiffResult({ ...result, identical, hash1, hash2 });
     },
-    []
+    [loadedFiles]
   );
 
   const fileKeys = Object.keys(loadedFiles);
@@ -545,6 +552,9 @@ export default function App() {
               leftLines={diffResult?.leftLines || []}
               rightLines={diffResult?.rightLines || []}
               stats={diffResult?.stats || null}
+              identical={diffResult?.identical ?? null}
+              hash1={diffResult?.hash1 ?? null}
+              hash2={diffResult?.hash2 ?? null}
               onClear={handleClearComparison}
               onRemoveFile1={() => handleRemoveFile(compareFileKeys[0])}
               onRemoveFile2={() => handleRemoveFile(compareFileKeys[1])}

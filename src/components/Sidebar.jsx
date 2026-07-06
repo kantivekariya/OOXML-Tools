@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { getFileIcon, getFileTypeColor, isOOXMLFile } from '../lib/fileUtils';
 import FileTreeNode from './FileTreeNode';
+import HashBadge from './HashBadge';
 
 function buildTreeStructure(filePaths) {
   const tree = {};
@@ -51,6 +52,9 @@ function FileGroup({ fileKey, fileData, currentFilePath, onSelectFile, onRemoveF
             <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
         </button>
+      </div>
+      <div className="px-2 pb-1.5 pl-6" onClick={(e) => e.stopPropagation()}>
+        <HashBadge hash={fileData.hash} />
       </div>
       {open && (
         <div className="sidebar-tree">
@@ -190,6 +194,15 @@ export default function Sidebar({
     return `${count} file${count !== 1 ? 's' : ''} loaded`;
   };
 
+  const getWholeFileMatch = () => {
+    if (fileKeys.length < 2) return null;
+    const { hash: hash1 } = loadedFiles[fileKeys[0]];
+    const { hash: hash2 } = loadedFiles[fileKeys[1]];
+    if (!hash1 || !hash2) return null;
+    return hash1 === hash2;
+  };
+  const wholeFileMatch = mode === 'compare' ? getWholeFileMatch() : null;
+
   return (
     <aside className="w-80 bg-editor-sidebar border-r border-editor-border text-editor-text flex flex-col flex-shrink-0">
       <div className="p-4 border-b border-editor-border flex-shrink-0">
@@ -240,7 +253,35 @@ export default function Sidebar({
           ))}
         </div>
       ) : (
-        renderCompareTree()
+        <>
+          {wholeFileMatch !== null && (
+            <div className="p-3 border-b border-editor-border flex-shrink-0">
+              <div
+                className={`text-xs font-semibold px-2 py-1.5 rounded mb-2 ${
+                  wholeFileMatch
+                    ? 'bg-green-900 bg-opacity-40 text-green-400'
+                    : 'bg-yellow-900 bg-opacity-40 text-yellow-400'
+                }`}
+              >
+                {wholeFileMatch ? '✅ Files are identical (SHA-256 match)' : '⚠️ Files differ (SHA-256 mismatch)'}
+              </div>
+              <div className="space-y-1.5">
+                {fileKeys.slice(0, 2).map((fk, idx) => (
+                  <div key={fk} className="flex items-center justify-between gap-2 min-w-0">
+                    <span
+                      className="text-xs text-gray-300 truncate flex-shrink min-w-0"
+                      title={loadedFiles[fk].name}
+                    >
+                      {idx === 0 ? '📄 A' : '📄 B'}: {loadedFiles[fk].name}
+                    </span>
+                    <HashBadge hash={loadedFiles[fk].hash} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {renderCompareTree()}
+        </>
       )}
     </aside>
   );

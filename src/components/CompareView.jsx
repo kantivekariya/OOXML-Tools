@@ -1,4 +1,5 @@
 import { useRef, useEffect } from 'react';
+import HashBadge from './HashBadge';
 
 function DiffLine({ entry }) {
   const { lineNum, html, type } = entry;
@@ -22,6 +23,9 @@ export default function CompareView({
   leftLines,
   rightLines,
   stats,
+  identical,
+  hash1,
+  hash2,
   onClear,
   onRemoveFile1,
   onRemoveFile2,
@@ -97,6 +101,16 @@ export default function CompareView({
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-800">File Comparison</h3>
           <div className="flex items-center space-x-4">
+            {identical === true && (
+              <span className="text-sm font-medium text-green-600 bg-green-50 px-2 py-1 rounded">
+                ✅ Files are identical
+              </span>
+            )}
+            {identical === false && (
+              <span className="text-sm font-medium text-yellow-700 bg-yellow-50 px-2 py-1 rounded">
+                ⚠️ Files differ
+              </span>
+            )}
             {stats && (
               <div className="text-sm text-gray-600">
                 <span className="text-green-600">+{stats.added}</span>{' '}
@@ -159,8 +173,9 @@ export default function CompareView({
       <div className="flex-1 flex min-h-0 overflow-hidden">
         {/* Left Panel */}
         <div className="w-1/2 border-r border-gray-300 flex flex-col min-h-0 max-h-full flex-shrink-0">
-          <div className="bg-gray-100 px-4 py-2 border-b border-gray-200 flex-shrink-0">
-            <h4 className="font-medium text-gray-800">{file1Name || 'Select first file'}</h4>
+          <div className="bg-gray-100 px-4 py-2 border-b border-gray-200 flex-shrink-0 flex items-center justify-between gap-2 min-w-0">
+            <h4 className="font-medium text-gray-800 truncate">{file1Name || 'Select first file'}</h4>
+            {hash1 && <HashBadge hash={hash1} />}
           </div>
           <div
             ref={leftRef}
@@ -174,8 +189,9 @@ export default function CompareView({
 
         {/* Right Panel */}
         <div className="w-1/2 flex flex-col min-h-0 max-h-full flex-shrink-0">
-          <div className="bg-gray-100 px-4 py-2 border-b border-gray-200 flex-shrink-0">
-            <h4 className="font-medium text-gray-800">{file2Name || 'Select second file'}</h4>
+          <div className="bg-gray-100 px-4 py-2 border-b border-gray-200 flex-shrink-0 flex items-center justify-between gap-2 min-w-0">
+            <h4 className="font-medium text-gray-800 truncate">{file2Name || 'Select second file'}</h4>
+            {hash2 && <HashBadge hash={hash2} />}
           </div>
           <div
             ref={rightRef}

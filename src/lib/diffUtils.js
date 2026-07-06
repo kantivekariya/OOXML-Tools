@@ -37,6 +37,15 @@ export function computeDiff(lines1, lines2) {
   return diff;
 }
 
+export function buildIdenticalView(content) {
+  const lines = content.split('\n').map((line, i) => ({
+    lineNum: i + 1,
+    html: applySyntaxHighlighting(line),
+    type: 'equal',
+  }));
+  return { leftLines: lines, rightLines: lines, stats: { added: 0, removed: 0 } };
+}
+
 export function generateProfessionalDiff(content1, content2) {
   const lines1 = content1.split('\n');
   const lines2 = content2.split('\n');
