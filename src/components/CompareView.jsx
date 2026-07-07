@@ -1,5 +1,6 @@
 import { useRef, useEffect } from 'react';
 import HashBadge from './HashBadge';
+import HashCompare from './HashCompare';
 
 function DiffLine({ entry }) {
   const { lineNum, html, type } = entry;
@@ -98,28 +99,23 @@ export default function CompareView({
     <div className="flex-1 flex flex-col h-full min-h-0">
       {/* Compare Header */}
       <div className="bg-white border-b border-gray-200 p-4 flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-800">File Comparison</h3>
-          <div className="flex items-center space-x-4">
-            {identical === true && (
-              <span className="text-sm font-medium text-green-600 bg-green-50 px-2 py-1 rounded">
-                ✅ Files are identical
-              </span>
-            )}
-            {identical === false && (
-              <span className="text-sm font-medium text-yellow-700 bg-yellow-50 px-2 py-1 rounded">
-                ⚠️ Files differ
-              </span>
+        <div className="flex items-center justify-between gap-4">
+          <h3 className="text-lg font-semibold text-gray-800 flex-shrink-0">File Comparison</h3>
+          <div className="flex items-center gap-4 min-w-0">
+            {hash1 && hash2 && (
+              <div className="w-72 flex-shrink-0">
+                <HashCompare hashA={hash1} hashB={hash2} nameA={file1Name} nameB={file2Name} theme="light" />
+              </div>
             )}
             {stats && (
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-gray-600 flex-shrink-0">
                 <span className="text-green-600">+{stats.added}</span>{' '}
                 <span className="text-red-600">-{stats.removed}</span>
               </div>
             )}
             <button
               onClick={onClear}
-              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
+              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors flex-shrink-0"
             >
               🗑️ Clear
             </button>

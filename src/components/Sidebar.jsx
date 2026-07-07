@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { getFileIcon, getFileTypeColor, isOOXMLFile } from '../lib/fileUtils';
 import FileTreeNode from './FileTreeNode';
 import HashBadge from './HashBadge';
+import HashCompare from './HashCompare';
 
 function buildTreeStructure(filePaths) {
   const tree = {};
@@ -256,28 +257,12 @@ export default function Sidebar({
         <>
           {wholeFileMatch !== null && (
             <div className="p-3 border-b border-editor-border flex-shrink-0">
-              <div
-                className={`text-xs font-semibold px-2 py-1.5 rounded mb-2 ${
-                  wholeFileMatch
-                    ? 'bg-green-900 bg-opacity-40 text-green-400'
-                    : 'bg-yellow-900 bg-opacity-40 text-yellow-400'
-                }`}
-              >
-                {wholeFileMatch ? '✅ Files are identical (SHA-256 match)' : '⚠️ Files differ (SHA-256 mismatch)'}
-              </div>
-              <div className="space-y-1.5">
-                {fileKeys.slice(0, 2).map((fk, idx) => (
-                  <div key={fk} className="flex items-center justify-between gap-2 min-w-0">
-                    <span
-                      className="text-xs text-gray-300 truncate flex-shrink min-w-0"
-                      title={loadedFiles[fk].name}
-                    >
-                      {idx === 0 ? '📄 A' : '📄 B'}: {loadedFiles[fk].name}
-                    </span>
-                    <HashBadge hash={loadedFiles[fk].hash} />
-                  </div>
-                ))}
-              </div>
+              <HashCompare
+                hashA={loadedFiles[fileKeys[0]].hash}
+                hashB={loadedFiles[fileKeys[1]].hash}
+                nameA={loadedFiles[fileKeys[0]].name}
+                nameB={loadedFiles[fileKeys[1]].name}
+              />
             </div>
           )}
           {renderCompareTree()}
